@@ -1,0 +1,101 @@
+<style is:global>
+  html {
+    background-color: #282a36;
+    color: #eff0eb;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    height: 100%;
+  }
+  body {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    min-height: 100%;
+  }
+</style>
+
+<style>
+  .control {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+  .input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+  }
+  .input {
+    background-color: #686868;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    width: 100%;
+  }
+  .output-preview {
+    width: 100%;
+  }
+  .output {
+    color: #9aedfe;
+    width: max(400px, 50vw);
+  }
+</style>
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Astro</title>
+	</head>
+	<body>
+    <section class="control">
+      <label class="input-wrapper" for="text">
+        <span>Write text below</span>
+        <input class="input" id="text" type="text" value="ANSI gradients are nice" />
+      </label>
+      <span>Preview:</span>
+      <span class="output-preview"></span>
+      <span>Terminal text:</span>
+      <span class="output"></span>
+    </section>
+	</body>
+</html>
+
+<script>
+  import chroma from "chroma-js";
+
+  const scale = chroma.scale(["#feac5e", "#c779d0", "#4bc0c8"]);
+  const input = document.querySelector<HTMLInputElement>('#text');
+  const outputPreview = document.querySelector<HTMLElement>('.output-preview');
+  const output = document.querySelector<HTMLElement>('.output');
+
+  function setText(text: string) {
+    const steps = scale.domain([0, text.length]);
+    const outputPreviewContent: Array<string> = [];
+    const outputContent: Array<string> = [];
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const color = steps(i);
+      outputPreviewContent.push(`<span style="color: ${color}">${char}</span>`);
+
+      const [r, g, b] = color.rgb();
+      outputContent.push(`\\033[38;2;${r};${g};${b}m${char}`);
+    }
+
+    if (outputContent.length > 0) {
+      outputContent.push('\\033[0m');
+    }
+
+    outputPreview.innerHTML = outputPreviewContent.join('');
+    output.innerText = outputContent.join('');
+  }
+
+  setText(input.value);
+
+  input.addEventListener('input', (event) => {
+    setText((event.target as HTMLInputElement).value);
+  });
+</script>
