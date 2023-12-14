@@ -32,6 +32,10 @@
     font: inherit;
     width: 100%;
   }
+  .colors {
+    display: flex;
+    gap: 0.5em;
+  }
   .output-preview {
     width: 100%;
   }
@@ -52,12 +56,14 @@
 	<body>
     <section class="control">
       <label class="input-wrapper" for="text">
-        <span>Write text below</span>
+        <span>Text:</span>
         <input class="input" id="text" type="text" value="ANSI gradients are nice" />
       </label>
+      <span>Colors:</span>
+      <section class="colors" data-colors="#feac5e,#c779d0,#4bc0c8"></section>
       <span>Preview:</span>
       <span class="output-preview"></span>
-      <span>Terminal text:</span>
+      <span>Terminal:</span>
       <span class="output"></span>
     </section>
 	</body>
@@ -66,8 +72,9 @@
 <script>
   import chroma from "chroma-js";
 
-  const scale = chroma.scale(["#feac5e", "#c779d0", "#4bc0c8"]);
+  let scale = chroma.scale(["#feac5e", "#c779d0", "#4bc0c8"]);
   const input = document.querySelector<HTMLInputElement>('#text');
+  const colorEditor = document.querySelector<HTMLElement>('.colors');
   const outputPreview = document.querySelector<HTMLElement>('.output-preview');
   const output = document.querySelector<HTMLElement>('.output');
 
@@ -93,9 +100,32 @@
     output.innerText = outputContent.join('');
   }
 
-  setText(input.value);
+  function handleChangeColor(e: Event) {
+    const colorInput = (e.target as HTMLInputElement);
+    const color = colorInput.value;
+    const colors = colorEditor.dataset.colors.split(',');
+    colors[colorInput.dataset.index] = color;
+    colorEditor.dataset.colors = colors.join(',');
+    scale = chroma.scale(colors);
+    setText(input.value);
+  }
+
+  function renderColors() {
+    const colors = colorEditor.dataset.colors.split(',');
+    const html = colors.map((color, index) => {
+      return `<input type="color" value="${color}" data-index="${index}" />`;
+    }).join('');
+    colorEditor.innerHTML = html;
+    colorEditor.querySelectorAll('input[type=color]').forEach((input) => {
+      input.addEventListener('change', handleChangeColor);
+    });
+  }
 
   input.addEventListener('input', (event) => {
     setText((event.target as HTMLInputElement).value);
   });
+
+  // Initial render
+  setText(input.value);
+  renderColors();
 </script>
